@@ -47,12 +47,13 @@ async def get_video_data(url, search, bettersearch, loop):
         url = "https://www.youtube.com/watch?v="+data["id"]
         title = data["title"]
         description = data["description"]
+        likes = data["like_count"]
         views = data["view_count"]
         duration = data["duration"]
         thumbnail = data["thumbnail"]
         channel = data["uploader"]
         channel_url = data["uploader_url"]
-        return Song(source, url, title, description, views, duration, thumbnail, channel, channel_url, False)
+        return Song(source, url, title, description, likes, views, duration, thumbnail, channel, channel_url, False)
     else:
         if bettersearch:
             url = await ytbettersearch(url)
@@ -61,12 +62,13 @@ async def get_video_data(url, search, bettersearch, loop):
             url = "https://www.youtube.com/watch?v="+data["id"]
             title = data["title"]
             description = data["description"]
+            likes = data["like_count"]
             views = data["view_count"]
             duration = data["duration"]
             thumbnail = data["thumbnail"]
             channel = data["uploader"]
             channel_url = data["uploader_url"]
-            return Song(source, url, title, description, views, duration, thumbnail, channel, channel_url, False)
+            return Song(source, url, title, description, likes, views, duration, thumbnail, channel, channel_url, False)
         elif search:
             ytdl = youtube_dl.YoutubeDL({"format": "bestaudio/best", "restrictfilenames": True, "noplaylist": True, "nocheckcertificate": True, "ignoreerrors": True, "logtostderr": False, "quiet": True, "no_warnings": True, "default_search": "auto", "source_address": "0.0.0.0"})
             data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
@@ -79,12 +81,13 @@ async def get_video_data(url, search, bettersearch, loop):
             url = "https://www.youtube.com/watch?v="+data["id"]
             title = data["title"]
             description = data["description"]
+            likes = data["like_count"]
             views = data["view_count"]
             duration = data["duration"]
             thumbnail = data["thumbnail"]
             channel = data["uploader"]
             channel_url = data["uploader_url"]
-            return Song(source, url, title, description, views, duration, thumbnail, channel, channel_url, False)
+            return Song(source, url, title, description, likes, views, duration, thumbnail, channel, channel_url, False)
         
 def check_queue(ctx, opts, music, after, on_play, loop):
     if not has_voice:
@@ -155,9 +158,9 @@ class MusicPlayer(object):
         self.on_play_func = self.on_queue_func = self.on_skip_func = self.on_stop_func = self.on_pause_func = self.on_resume_func = self.on_loop_toggle_func = self.on_volume_change_func = self.on_remove_from_queue_func = None
         ffmpeg_error = kwargs.get("ffmpeg_error_betterfix", kwargs.get("ffmpeg_error_fix"))
         if ffmpeg_error and "ffmpeg_error_betterfix" in kwargs.keys():
-            self.ffmpeg_opts = {"options": "-vn -loglevel quiet -nostats", "before_options": "-nostdin"}
+            self.ffmpeg_opts = {"options": "-vn -loglevel quiet -hide_banner -nostats", "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 0 -nostdin"}
         elif ffmpeg_error:
-            self.ffmpeg_opts = {"options": "-vn", "before_options": "-nostdin"}
+            self.ffmpeg_opts = {"options": "-vn", "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 0 -nostdin"}
         else:
             self.ffmpeg_opts = {"options": "-vn", "before_options": "-nostdin"}
     def disable(self):
@@ -286,11 +289,12 @@ class MusicPlayer(object):
         self.music.players.remove(self)
         
 class Song(object):
-    def __init__(self, source, url, title, description, views, duration, thumbnail, channel, channel_url, loop):
+    def __init__(self, source, url, title, description, likes, views, duration, thumbnail, channel, channel_url, loop):
         self.source = source
         self.url = url
         self.title = title
         self.description = description
+        self.likes = likes
         self.views = views
         self.name = title
         self.duration = duration
